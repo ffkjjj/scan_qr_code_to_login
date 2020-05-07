@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>login</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+</head>
+<body>
+<img id="qrcode" src=""/>
+<p id="info"></p>
+
+<script type="application/javascript">
+    $(document).ready(function () {
+        $.ajax({
+            url: "/qrcode/new/base64",
+            success: function (result) {
+                if (result.code !== 0) {
+                    $("#info").text = "出了一些问题"
+                    return;
+                }
+                $("#qrcode").attr('src', result.data.info);
+                var timer = setInterval(function () {
+                    queryScanQRCodeStatus(result.data.uuid, result.data.token, timer)
+                }, 2000);
+            }
+        });
+
+        function queryScanQRCodeStatus(uuid, token, timer) {
+            clearInterval(timer)
+            var queryStatusUrl = "/qrcode/status/" + uuid;
+            $.ajax({
+                url: queryStatusUrl,
+                success: function (result) {
+                    if (result.data.status === 1) {
+                        window.location.href = "http://192.168.99.196:8080/api/v1/hello?token=" + token;
+                        return;
+                    }
+                    timer = setInterval(function () {
+                        queryScanQRCodeStatus(uuid, token, timer)
+                    }, 2000);
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
